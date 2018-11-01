@@ -255,16 +255,16 @@ defmodule Mix.Releases.Release do
     env_profile = Map.from_struct(env.profile)
 
     profile =
-      Enum.reduce(env_profile, rel_profile, fn 
+      Enum.reduce(env_profile, rel_profile, fn
         {:plugins, ps}, acc when ps not in [nil, []] ->
           # Merge plugins
           rel_plugins = Map.get(acc, :plugins, [])
           Map.put(acc, :plugins, rel_plugins ++ ps)
         {k, v}, acc ->
           case v do
-            ignore when ignore in [nil, []] -> 
+            ignore when ignore in [nil, []] ->
               acc
-            _ -> 
+            _ ->
               Map.put(acc, k, v)
           end
       end)
@@ -490,7 +490,6 @@ defmodule Mix.Releases.Release do
 
       print_discovered_apps(result)
 
-      result
     after
       :ets.delete(as)
       :digraph.delete(dg)
@@ -498,6 +497,8 @@ defmodule Mix.Releases.Release do
   catch
     :throw, err ->
       {:error, {:apps, err}}
+
+    apps
   end
 
   defp add_apps(_dg, _as, []),
