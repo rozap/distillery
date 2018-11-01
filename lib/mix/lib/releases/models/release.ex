@@ -473,7 +473,7 @@ defmodule Mix.Releases.Release do
 
     try do
       # Add app relationships to the graph
-      add_apps(dg, as, apps)
+      the_apps = add_apps(dg, as, apps)
 
       # Perform topological sort
       result =
@@ -490,7 +490,7 @@ defmodule Mix.Releases.Release do
 
       print_discovered_apps(result)
 
-      apps
+      the_apps
     after
       :ets.delete(as)
       :digraph.delete(dg)
@@ -501,11 +501,10 @@ defmodule Mix.Releases.Release do
   end
 
   defp add_apps(_dg, _as, []),
-    do: :ok
+    do: []
 
   defp add_apps(dg, as, [app | apps]) do
-    add_app(dg, as, nil, app)
-    add_apps(dg, as, apps)
+    add_app(dg, as, nil, app) ++ add_apps(dg, as, apps)
   end
 
   defp add_app(dg, as, parent, {name, start_type}) do
@@ -516,7 +515,7 @@ defmodule Mix.Releases.Release do
 
       _ ->
         # Already visited
-        :ok
+        []
     end
   end
   defp add_app(dg, as, parent, name) do
@@ -526,7 +525,7 @@ defmodule Mix.Releases.Release do
   defp do_add_app(dg, as, nil, app) do
     :digraph.add_vertex(dg, app.name)
     :ets.insert(as, {app.name, app})
-    do_add_children(dg, as, app.name, app.applications ++ app.included_applications)
+    [app | do_add_children(dg, as, app.name, app.applications ++ app.included_applications)]
   end
   defp do_add_app(dg, as, parent, app) do
     :digraph.add_vertex(dg, app.name)
@@ -536,16 +535,15 @@ defmodule Mix.Releases.Release do
         raise "edge from #{parent} to #{app.name} would result in cycle: #{inspect(reason)}"
 
       _ ->
-        do_add_children(dg, as, app.name, app.applications ++ app.included_applications)
+        [app | do_add_children(dg, as, app.name, app.applications ++ app.included_applications)]
     end
   end
 
   defp do_add_children(_dg, _as, _parent, []),
-    do: :ok
+    do: []
 
   defp do_add_children(dg, as, parent, [app | apps]) do
-    add_app(dg, as, parent, app)
-    do_add_children(dg, as, parent, apps)
+    add_app(dg, as, parent, app) ++ do_add_children(dg, as, parent, apps)
   end
 
   defp correct_app_path_and_vsn(%App{} = app, %__MODULE__{profile: %Profile{include_erts: ie}})
