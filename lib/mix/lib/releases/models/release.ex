@@ -490,6 +490,7 @@ defmodule Mix.Releases.Release do
 
       print_discovered_apps(result)
 
+      apps
     after
       :ets.delete(as)
       :digraph.delete(dg)
@@ -497,8 +498,6 @@ defmodule Mix.Releases.Release do
   catch
     :throw, err ->
       {:error, {:apps, err}}
-
-    apps
   end
 
   defp add_apps(_dg, _as, []),
